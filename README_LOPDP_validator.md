@@ -80,28 +80,77 @@ El límite de memoria/CPU del contenedor (`--memory`, `--cpus`) es la última l�
 archivo malicioso que intente agotar recursos durante el parseo de PDF/DOCX — se recomienda fijarlo
 también en el orquestador de producción (Render, Railway, Fly.io, ECS, etc.), no solo en local.
 
-### Desplegar en PythonAnywhere
+### Desplegar en PythonAnywhere (cuenta gratuita, Python 3.10)
 PythonAnywhere solo ejecuta apps **WSGI** (Flask/Django); esta app es **ASGI** (FastAPI). Por eso
 `requirements.txt` incluye `a2wsgi`, que envuelve la app FastAPI para que PythonAnywhere la sirva
 igual que cualquier otra. Probado localmente (subida de archivo incluida) simulando ese mismo
-adaptador antes de documentar estos pasos.
+adaptador antes de documentar estos pasos. El repositorio es público, así que `git clone`/`git pull`
+funcionan sin credenciales — `github.com` está en la lista blanca de sitios permitidos para cuentas
+gratuitas de PythonAnywhere.
 
-1. **Consola Bash de PythonAnywhere** (pestaña "Consoles" → "Bash"):
+**1. Consola Bash** (pestaña "Consoles" → "Bash"):
+```
+git clone https://github.com/cviteri2/validadorlopdp.git
+cd validadorlopdp
+mkvirtualenv --python=/usr/bin/python3.10 validador-env
+pip install -r requirements.txt
+```
+
+**2. Pestaña "Web"** → "Add a new web app" → **salta el asistente de dominio** (usa el que te dan
+gratis) → **"Manual configuration"** → elige **Python 3.10**.
+
+**3. "Virtualenv"**: escribe `/home/TU_USUARIO/.virtualenvs/validador-env` y confirma con el check ✓.
+
+**4. "Code" → WSGI configuration file**: click en el link del archivo, borra todo su contenido y
+pega el de `deploy/pythonanywhere_wsgi.py.example`, cambiando `<USERNAME>` por tu usuario real. Si no
+vas a activar el webhook del paso 7 ahora, deja las líneas de `os.environ[...]` comentadas tal cual.
+
+**5. "Static files"**: añade el mapeo URL `/static/` → Directory
+`/home/TU_USUARIO/validadorlopdp/web/static/`.
+
+**6. Click "Reload"** (botón verde arriba de la pestaña Web). Tu validador queda en
+`https://TU_USUARIO.pythonanywhere.com`.
+
+**7. Auto-deploy con webhook de GitHub (opcional pero es lo que pediste):**
+
+La app ya trae una ruta `/deploy/webhook` que, al recibir un push de GitHub con la firma correcta,
+hace `git fetch` + `git reset --hard` sobre la rama configurada, reinstala `requirements.txt` y le
+pide a la API de PythonAnywhere que recargue la web app — sin que tengas que entrar manualmente.
+Esa ruta **no existe** en el servidor a menos que definas `GITHUB_WEBHOOK_SECRET`, así que hasta que
+sigas estos pasos no hay ninguna superficie expuesta de más.
+
+7.1. **Generar el secreto y el token**:
+   - Secreto del webhook: cualquier cadena larga y aleatoria tuya, por ejemplo con
+     `python3 -c "import secrets; print(secrets.token_hex(32))"` en la consola Bash de PythonAnywhere.
+   - Token de API: pestaña **"Account" → "API Token"** en PythonAnywhere → "Create a new API token".
+
+7.2. **Pegar ambos en el WSGI file** (mismo archivo del paso 4), descomentando y completando:
+   ```python
+   os.environ["GITHUB_WEBHOOK_SECRET"] = "el-secreto-que-generaste"
+   os.environ["PYTHONANYWHERE_API_TOKEN"] = "el-token-de-la-pestaña-Account"
+   os.environ["PYTHONANYWHERE_USERNAME"] = "TU_USUARIO"
+   os.environ["DEPLOY_BRANCH"] = "main"
    ```
-   git clone https://github.com/cviteri2/validadorlopdp.git
-   cd validadorlopdp
-   mkvirtualenv --python=/usr/bin/python3.11 validador-env
-   pip install -r requirements.txt
-   ```
-2. **Pestaña "Web"** → "Add a new web app" → "Manual configuration" → Python 3.11.
-3. En **"Virtualenv"**, apunta a `/home/TU_USUARIO/.virtualenvs/validador-env`.
-4. En **"Code" → WSGI configuration file**, reemplaza todo el contenido por el de
-   `deploy/pythonanywhere_wsgi.py.example` (cambia `USERNAME` por tu usuario real de PythonAnywhere).
-5. En **"Static files"**, añade el mapeo `/static/` → `/home/TU_USUARIO/validadorlopdp/web/static/`
-   (mejora el rendimiento de la hoja de estilos frente a servirla vía la app).
-6. Click **"Reload"**. Tu validador queda en `https://TU_USUARIO.pythonanywhere.com`.
-7. **Actualizar el código más adelante**: `git pull` dentro de `validadorlopdp` en la consola Bash
-   + botón "Reload" en la pestaña Web. No hay despliegue automático desde GitHub en el plan gratuito.
+   Guarda y da clic en **"Reload"** en la pestaña Web para que tome estas variables.
+
+7.3. **Crear el webhook en GitHub**: en el repo, `Settings` → `Webhooks` → `Add webhook`:
+   - Payload URL: `https://TU_USUARIO.pythonanywhere.com/deploy/webhook`
+   - Content type: `application/json`
+   - Secret: el mismo valor exacto que pusiste en `GITHUB_WEBHOOK_SECRET`
+   - "Which events": *Just the push event*
+   - Guardar. GitHub manda un evento `ping` inmediatamente — en "Recent Deliveries" debe verse
+     respuesta `200` con `{"status":"pong"}`.
+
+7.4. **Probar de verdad**: haz un commit y `git push` a `main`. En unos segundos, revisa la pestaña
+   "Web" → "Log files" → "Error log" de PythonAnywhere: deberías ver las líneas `deploy: ejecutando
+   git fetch...`, `git reset --hard...`, `pip install...` y la recarga solicitada.
+
+**Importante**: con el webhook activo, el checkout en PythonAnywhere pasa a actualizarse solo en cada
+push a `main` (`git reset --hard` descarta cualquier edición manual hecha ahí directamente) — todo
+cambio de código debe llegar vía `git push`, nunca editando archivos a mano en el servidor.
+
+**Actualizar sin webhook**: si no lo activas, hazlo manual — `git pull` en la consola Bash + botón
+"Reload" en la pestaña Web cada vez que quieras publicar cambios.
 
 Limitación del plan gratuito de PythonAnywhere: la URL es fija en `TU_USUARIO.pythonanywhere.com`,
 **no puedes usar un subdominio propio** como `validador.protego-consulting.com` — eso requiere el

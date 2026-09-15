@@ -58,6 +58,10 @@ app = FastAPI(title="Validador LOPDP — Protego Consulting")
 app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 
+if os.environ.get("GITHUB_WEBHOOK_SECRET"):
+    from .deploy_webhook import router as deploy_webhook_router
+    app.include_router(deploy_webhook_router)
+
 _rate_lock = asyncio.Lock()
 _hits_by_ip = defaultdict(deque)
 
