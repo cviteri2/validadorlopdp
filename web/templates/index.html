@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Validador gratuito de Política de Privacidad LOPDP | Protego Consulting</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="card">
+    <header class="card__header">
+      <h1>Validador gratuito de Política de Privacidad — LOPDP Ecuador</h1>
+      <p class="subtitle">Sube tu política de protección de datos y recibe en segundos un informe
+        de cumplimiento con recomendaciones priorizadas.</p>
+    </header>
+
+    {% if error %}
+    <div class="alert alert--error">{{ error }}</div>
+    {% endif %}
+
+    <section class="notice">
+      <strong>Antes de continuar, lee esto:</strong>
+      <p>
+        Esta herramienta hace un <em>cribado automatizado por palabras clave</em> sobre el texto de tu
+        política frente a los deberes de información de la LOPDP. Un ítem marcado "Cumple" solo indica que
+        el texto menciona razonablemente el tema — <strong>no certifica que el contenido sea legalmente
+        correcto, completo o coherente con tu Registro de Actividades de Tratamiento (RAT) real</strong>.
+        No es una auditoría legal ni sustituye la revisión de un DPO o asesor. No almacenamos tu
+        documento: se procesa y se descarta inmediatamente después de generar el informe.
+      </p>
+    </section>
+
+    <form action="/analizar" method="post" enctype="multipart/form-data" class="form">
+      <label class="field">
+        <span>Nombre de tu empresa (aparecerá en el informe)</span>
+        <input type="text" name="cliente" maxlength="120" placeholder="Ej. Mi Empresa S.A.">
+      </label>
+
+      <label class="field">
+        <span>Política de privacidad (.docx, .pdf o .txt — máx. {{ max_mb | int }} MB)</span>
+        <input type="file" name="politica" accept=".docx,.pdf,.txt" required>
+      </label>
+
+      <label class="field field--checkbox">
+        <input type="checkbox" name="consiento" required>
+        <span>He leído el aviso anterior y entiendo que este resultado es un cribado documental
+          preliminar, no una auditoría legal.</span>
+      </label>
+
+      <button type="submit">Analizar y descargar informe</button>
+    </form>
+
+    <footer class="card__footer">
+      <p>¿Necesitas una auditoría completa (RAT, EIPDP, contratos con encargados)?
+        <a href="https://protego-consulting.com/">Contáctanos</a>.</p>
+    </footer>
+  </main>
+</body>
+</html>
