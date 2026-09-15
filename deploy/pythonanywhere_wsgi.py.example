@@ -1,0 +1,35 @@
+# Plantilla para el archivo WSGI que PythonAnywhere pide en la pestaña "Web".
+#
+# Copia el contenido de este archivo (sin el ".example") en el editor que
+# PythonAnywhere abre automáticamente al crear una web app manual con Python 3.10,
+# reemplazando TODO su contenido. Ajusta los valores marcados con "<...>".
+#
+# PythonAnywhere solo sabe servir aplicaciones WSGI (como Flask/Django); esta
+# app está escrita en FastAPI, que es ASGI. `a2wsgi` la envuelve para que
+# PythonAnywhere pueda llamarla igual que a cualquier app WSGI.
+#
+# Este archivo vive SOLO en PythonAnywhere (en su editor web), nunca en este
+# repositorio con los valores reales — por eso los secretos van aquí y no en
+# variables versionadas en git.
+
+import os
+import sys
+
+PROJECT_DIR = "/home/<USERNAME>/validadorlopdp"
+if PROJECT_DIR not in sys.path:
+    sys.path.insert(0, PROJECT_DIR)
+
+# --- Despliegue automático por webhook de GitHub (opcional) ---------------
+# Deja estas tres líneas comentadas si NO quieres activar el auto-deploy;
+# la ruta /deploy/webhook simplemente no se registra si falta el secreto.
+#
+# os.environ["GITHUB_WEBHOOK_SECRET"] = "<secreto-largo-y-aleatorio>"
+# os.environ["PYTHONANYWHERE_API_TOKEN"] = "<tu API token, pestaña Account > API Token>"
+# os.environ["PYTHONANYWHERE_USERNAME"] = "<USERNAME>"
+# os.environ["DEPLOY_BRANCH"] = "main"
+# ---------------------------------------------------------------------------
+
+from a2wsgi import ASGIMiddleware
+from web.app import app as _asgi_app
+
+application = ASGIMiddleware(_asgi_app)
