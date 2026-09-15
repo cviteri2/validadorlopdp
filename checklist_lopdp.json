@@ -1,0 +1,408 @@
+{
+  "_meta": {
+    "nombre": "Checklist de verificación de Políticas de Protección de Datos frente a la LOPDP (Ecuador)",
+    "version": "1.0",
+    "fuente": "Ley Orgánica de Protección de Datos Personales (Ley 0, Registro Oficial Suplemento 459, 26-may-2021)",
+    "advertencia": "Este checklist evalúa el CONTENIDO INFORMATIVO de una política/aviso de privacidad frente a los deberes de transparencia e información de la LOPDP. No sustituye una auditoría legal completa (RAT, EIPDP, contratos con encargados, medidas técnicas reales). Úsalo como screening documental, no como dictamen de cumplimiento integral.",
+    "modo_ayuda": "Cada ítem tiene 'patrones' (palabras/frases o regex) que se buscan en el texto normalizado (minúsculas, sin tildes). 'modo':'any' = basta 1 coincidencia. 'modo':'all' = deben aparecer todas (si solo aparecen algunas, se marca PARCIAL). Ajusta 'patrones' libremente; puedes agregar sinónimos."
+  },
+  "items": [
+    {
+      "id": "TRANS-01",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 8",
+      "requisito": "Identidad y datos de contacto del responsable del tratamiento (domicilio, teléfono, correo)",
+      "modo": "all",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "responsable del tratamiento",
+        "correo electronico|correo-e|email|e-mail",
+        "telefono|numero de contacto"
+      ]
+    },
+    {
+      "id": "TRANS-02",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 9",
+      "requisito": "Identidad y datos de contacto del Delegado de Protección de Datos (DPO), cuando corresponda",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": false,
+      "patrones": [
+        "delegado de proteccion de datos",
+        "\\bdpo\\b",
+        "oficial de proteccion de datos"
+      ]
+    },
+    {
+      "id": "TRANS-03",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 1",
+      "requisito": "Fines / finalidades del tratamiento claramente descritos",
+      "modo": "any",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "finalidad(es)? del tratamiento",
+        "fines del tratamiento",
+        "para que (usamos|utilizamos|tratamos|recopilamos)",
+        "objetivo(s)? del tratamiento"
+      ]
+    },
+    {
+      "id": "TRANS-04",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 2 / Art. 7",
+      "requisito": "Base legal o legitimación del tratamiento (consentimiento, obligación legal, ejecución de contrato, interés legítimo, etc.)",
+      "modo": "any",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "base legal",
+        "base de licitud",
+        "legitimacion del tratamiento",
+        "consentimiento del titular",
+        "ejecucion de(l)? contrato",
+        "interes legitimo",
+        "obligacion legal"
+      ]
+    },
+    {
+      "id": "TRANS-05",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 4 / Art. 10 lit. i)",
+      "requisito": "Plazo o criterio de conservación de los datos personales",
+      "modo": "any",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "tiempo de conservacion",
+        "plazo de conservacion",
+        "periodo de retencion",
+        "conservaremos sus datos",
+        "conservacion de (los|sus) datos"
+      ]
+    },
+    {
+      "id": "TRANS-06",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 6",
+      "requisito": "Origen de los datos cuando no se obtienen directamente del titular",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "origen de (los|sus) datos",
+        "datos obtenidos de (terceros|fuentes)",
+        "fuente de los datos"
+      ]
+    },
+    {
+      "id": "TRANS-07",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 10 / Cap. V y IX",
+      "requisito": "Transferencias o comunicaciones nacionales e internacionales, destinatarios y finalidad de estas",
+      "modo": "any",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "transferencia(s)? (nacional|internacional)? de datos",
+        "comunicacion de datos personales",
+        "destinatarios de (los|sus) datos",
+        "compartimos (sus|los) datos"
+      ]
+    },
+    {
+      "id": "TRANS-08",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 11 y 12",
+      "requisito": "Consecuencias de no entregar los datos / de entregar datos erróneos o inexactos",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "consecuencias de (no proporcionar|no entregar|negarse a)",
+        "si no proporciona sus datos",
+        "datos erroneos o inexactos"
+      ]
+    },
+    {
+      "id": "TRANS-09",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 13 / Art. 8",
+      "requisito": "Posibilidad de revocar el consentimiento en cualquier momento",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": true,
+      "patrones": [
+        "revocar (el|su) consentimiento",
+        "retirar (el|su) consentimiento",
+        "revocatoria del consentimiento"
+      ]
+    },
+    {
+      "id": "TRANS-10",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 16",
+      "requisito": "Canal para presentar reclamos ante el responsable y ante la Autoridad de Protección de Datos Personales",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": true,
+      "patrones": [
+        "reclamo(s)? ante (el responsable|la autoridad)",
+        "autoridad de proteccion de datos personales",
+        "presentar (un )?reclamo"
+      ]
+    },
+    {
+      "id": "TRANS-11",
+      "categoria": "A. Identificación y transparencia (Art. 12)",
+      "articulo": "Art. 12, núm. 17 / Art. 20",
+      "requisito": "Existencia de decisiones automatizadas o elaboración de perfiles (si aplica)",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "decision(es)? automatizada(s)?",
+        "elaboracion de perfiles",
+        "profiling",
+        "valoraciones automatizadas"
+      ]
+    },
+    {
+      "id": "DER-01",
+      "categoria": "B. Derechos del titular (Arts. 13-20)",
+      "articulo": "Art. 13-17, 19, 20",
+      "requisito": "Enumera los derechos ARCO+ (acceso, rectificación, eliminación/cancelación, oposición, portabilidad, limitación/suspensión, no decisiones automatizadas)",
+      "modo": "any",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "derecho(s)? de acceso",
+        "derecho(s)? de rectificacion",
+        "derecho(s)? de (eliminacion|cancelacion|supresion)",
+        "derecho(s)? de oposicion",
+        "derecho(s)? (a|de) la portabilidad",
+        "derechos arco"
+      ]
+    },
+    {
+      "id": "DER-02",
+      "categoria": "B. Derechos del titular (Arts. 13-20)",
+      "articulo": "Art. 12, núm. 14",
+      "requisito": "Explica el mecanismo/procedimiento concreto para ejercer los derechos (formulario, correo, plazos)",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": true,
+      "patrones": [
+        "como ejercer (sus|estos) derechos",
+        "para ejercer (sus|estos) derechos",
+        "solicitud de ejercicio de derechos",
+        "plazo de (15|quince) dias"
+      ]
+    },
+    {
+      "id": "CONS-01",
+      "categoria": "C. Consentimiento y legitimación (Arts. 7-9)",
+      "articulo": "Art. 8",
+      "requisito": "Describe cómo se recaba el consentimiento (libre, específico, informado, inequívoco)",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": true,
+      "patrones": [
+        "consentimiento (libre|especifico|informado|inequivoco)",
+        "manifestacion de (la )?voluntad",
+        "acepto (el tratamiento|la politica)"
+      ]
+    },
+    {
+      "id": "MEN-01",
+      "categoria": "D. Menores y datos sensibles (Arts. 21, 24-26)",
+      "articulo": "Art. 21, 24",
+      "requisito": "Trata la protección especial de niñas, niños y adolescentes (si el servicio puede ser usado por menores)",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": false,
+      "patrones": [
+        "ninas, ninos y adolescentes",
+        "menores de edad",
+        "representante legal",
+        "consentimiento parental"
+      ]
+    },
+    {
+      "id": "MEN-02",
+      "categoria": "D. Menores y datos sensibles (Arts. 21, 24-26)",
+      "articulo": "Art. 25, 26",
+      "requisito": "Tratamiento de datos sensibles (salud, biométricos, ideología, etc.) con base legal específica, si aplica",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": false,
+      "patrones": [
+        "datos sensibles",
+        "datos biometricos",
+        "datos de salud",
+        "categorias especiales de datos"
+      ]
+    },
+    {
+      "id": "SEG-01",
+      "categoria": "E. Seguridad de la información (Arts. 37-46)",
+      "articulo": "Art. 37",
+      "requisito": "Describe medidas de seguridad técnicas y organizativas implementadas",
+      "modo": "any",
+      "peso": 3,
+      "obligatorio": true,
+      "patrones": [
+        "medidas de seguridad",
+        "medidas tecnicas y organizativas",
+        "cifrado|encriptacion",
+        "controles de seguridad de la informacion"
+      ]
+    },
+    {
+      "id": "SEG-02",
+      "categoria": "E. Seguridad de la información (Arts. 37-46)",
+      "articulo": "Art. 39",
+      "requisito": "Menciona protección de datos desde el diseño y por defecto",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "proteccion de datos desde el diseno",
+        "privacidad desde el diseno",
+        "privacy by design",
+        "proteccion (de datos )?por defecto"
+      ]
+    },
+    {
+      "id": "SEG-03",
+      "categoria": "E. Seguridad de la información (Arts. 37-46)",
+      "articulo": "Art. 43, 46",
+      "requisito": "Describe el procedimiento ante una vulneración/incidente de seguridad (notificación a la Autoridad y al titular)",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": true,
+      "patrones": [
+        "vulneracion de (la )?seguridad",
+        "incidente de seguridad",
+        "brecha de (seguridad|datos)",
+        "notificacion de (la )?vulneracion"
+      ]
+    },
+    {
+      "id": "ENC-01",
+      "categoria": "F. Encargados y terceros (Arts. 33-36)",
+      "articulo": "Art. 34, 35",
+      "requisito": "Menciona el uso de encargados del tratamiento o terceros proveedores y su sujeción contractual",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": false,
+      "patrones": [
+        "encargado(s)? del tratamiento",
+        "proveedores? (que|con acceso a) datos",
+        "contrato(s)? de encargo",
+        "terceros proveedores"
+      ]
+    },
+    {
+      "id": "INTL-01",
+      "categoria": "G. Transferencia internacional (Arts. 55-61)",
+      "articulo": "Art. 55-59",
+      "requisito": "Si hay transferencias internacionales, describe el mecanismo/garantía utilizada (nivel adecuado, garantías adecuadas, consentimiento explícito)",
+      "modo": "any",
+      "peso": 2,
+      "obligatorio": false,
+      "patrones": [
+        "transferencia internacional de datos",
+        "nivel adecuado de proteccion",
+        "garantias adecuadas",
+        "servidores? (fuera del pais|en el extranjero|ubicados en)"
+      ]
+    },
+    {
+      "id": "DPO-01",
+      "categoria": "H. Responsable, encargado y DPO (Arts. 47-51)",
+      "articulo": "Art. 48",
+      "requisito": "Indica si se designó Delegado de Protección de Datos y en qué supuesto (si corresponde por volumen/naturaleza del tratamiento)",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "delegado de proteccion de datos",
+        "se ha designado un dpo",
+        "designacion del delegado"
+      ]
+    },
+    {
+      "id": "DPO-02",
+      "categoria": "H. Responsable, encargado y DPO (Arts. 47-51)",
+      "articulo": "Art. 51",
+      "requisito": "Referencia al Registro Nacional de Protección de Datos Personales",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "registro nacional de proteccion de datos"
+      ]
+    },
+    {
+      "id": "VIG-01",
+      "categoria": "I. Vigencia y actualización de la política",
+      "articulo": "Principio de transparencia (Art. 10 lit. c)",
+      "requisito": "Indica fecha de vigencia o última actualización de la política",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "ultima actualizacion",
+        "fecha de (vigencia|actualizacion)",
+        "version (del|de la) documento"
+      ]
+    },
+    {
+      "id": "VIG-02",
+      "categoria": "I. Vigencia y actualización de la política",
+      "articulo": "Principio de lealtad y transparencia (Art. 10 lit. b, c)",
+      "requisito": "Explica cómo se notificarán cambios futuros a la política",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "cambios a (esta|la) politica",
+        "modificaciones a (esta|la) politica",
+        "actualizaciones de (esta|la) politica seran notificadas"
+      ]
+    },
+    {
+      "id": "PRIN-01",
+      "categoria": "J. Principios generales (Art. 10)",
+      "articulo": "Art. 10 lit. e), f)",
+      "requisito": "Refleja el principio de minimización / proporcionalidad (solo se recaban datos necesarios)",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "minimizacion de datos",
+        "estrictamente necesarios",
+        "datos necesarios para (la|el) finalidad",
+        "principio de proporcionalidad"
+      ]
+    },
+    {
+      "id": "PRIN-02",
+      "categoria": "J. Principios generales (Art. 10)",
+      "articulo": "Art. 10 lit. k)",
+      "requisito": "Refleja el principio de responsabilidad proactiva y demostrada",
+      "modo": "any",
+      "peso": 1,
+      "obligatorio": false,
+      "patrones": [
+        "responsabilidad proactiva",
+        "responsabilidad demostrada",
+        "accountability"
+      ]
+    }
+  ]
+}
