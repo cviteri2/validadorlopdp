@@ -4,9 +4,11 @@
 # PythonAnywhere abre automáticamente al crear una web app manual con Python 3.10,
 # reemplazando TODO su contenido. Ajusta los valores marcados con "<...>".
 #
-# PythonAnywhere solo sabe servir aplicaciones WSGI (como Flask/Django); esta
-# app está escrita en FastAPI, que es ASGI. `a2wsgi` la envuelve para que
-# PythonAnywhere pueda llamarla igual que a cualquier app WSGI.
+# La app está escrita en Flask (WSGI nativo), así que PythonAnywhere la sirve
+# directamente — no hace falta ningún adaptador. (Una versión anterior usaba
+# FastAPI + a2wsgi, pero ese puente depende de hilos que uWSGI no programa en
+# el plan gratuito de PythonAnywhere sin --enable-threads, y las peticiones se
+# quedaban colgadas hasta que HARAKIRI mataba el worker.)
 #
 # Este archivo vive SOLO en PythonAnywhere (en su editor web), nunca en este
 # repositorio con los valores reales — por eso los secretos van aquí y no en
@@ -20,7 +22,7 @@ if PROJECT_DIR not in sys.path:
     sys.path.insert(0, PROJECT_DIR)
 
 # --- Despliegue automático por webhook de GitHub (opcional) ---------------
-# Deja estas tres líneas comentadas si NO quieres activar el auto-deploy;
+# Deja estas líneas comentadas si NO quieres activar el auto-deploy;
 # la ruta /deploy/webhook simplemente no se registra si falta el secreto.
 #
 # os.environ["GITHUB_WEBHOOK_SECRET"] = "<secreto-largo-y-aleatorio>"
@@ -29,7 +31,4 @@ if PROJECT_DIR not in sys.path:
 # os.environ["DEPLOY_BRANCH"] = "main"
 # ---------------------------------------------------------------------------
 
-from a2wsgi import ASGIMiddleware
-from web.app import app as _asgi_app
-
-application = ASGIMiddleware(_asgi_app)
+from web.app import app as application
