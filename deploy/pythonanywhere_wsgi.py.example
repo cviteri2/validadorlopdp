@@ -1,0 +1,20 @@
+# Plantilla para el archivo WSGI que PythonAnywhere pide en la pestaña "Web".
+#
+# Copia el contenido de este archivo (sin el ".example") en el editor que
+# PythonAnywhere abre automáticamente al crear una web app manual con Python 3.11,
+# reemplazando TODO su contenido. Ajusta USERNAME y VENV_NAME a los tuyos.
+#
+# PythonAnywhere solo sabe servir aplicaciones WSGI (como Flask/Django); esta
+# app está escrita en FastAPI, que es ASGI. `a2wsgi` la envuelve para que
+# PythonAnywhere pueda llamarla igual que a cualquier app WSGI.
+
+import sys
+
+PROJECT_DIR = "/home/USERNAME/validadorlopdp"
+if PROJECT_DIR not in sys.path:
+    sys.path.insert(0, PROJECT_DIR)
+
+from a2wsgi import ASGIMiddleware
+from web.app import app as _asgi_app
+
+application = ASGIMiddleware(_asgi_app)

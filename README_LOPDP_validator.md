@@ -80,10 +80,54 @@ El límite de memoria/CPU del contenedor (`--memory`, `--cpus`) es la última l�
 archivo malicioso que intente agotar recursos durante el parseo de PDF/DOCX — se recomienda fijarlo
 también en el orquestador de producción (Render, Railway, Fly.io, ECS, etc.), no solo en local.
 
+### Desplegar en PythonAnywhere
+PythonAnywhere solo ejecuta apps **WSGI** (Flask/Django); esta app es **ASGI** (FastAPI). Por eso
+`requirements.txt` incluye `a2wsgi`, que envuelve la app FastAPI para que PythonAnywhere la sirva
+igual que cualquier otra. Probado localmente (subida de archivo incluida) simulando ese mismo
+adaptador antes de documentar estos pasos.
+
+1. **Consola Bash de PythonAnywhere** (pestaña "Consoles" → "Bash"):
+   ```
+   git clone https://github.com/cviteri2/validadorlopdp.git
+   cd validadorlopdp
+   mkvirtualenv --python=/usr/bin/python3.11 validador-env
+   pip install -r requirements.txt
+   ```
+2. **Pestaña "Web"** → "Add a new web app" → "Manual configuration" → Python 3.11.
+3. En **"Virtualenv"**, apunta a `/home/TU_USUARIO/.virtualenvs/validador-env`.
+4. En **"Code" → WSGI configuration file**, reemplaza todo el contenido por el de
+   `deploy/pythonanywhere_wsgi.py.example` (cambia `USERNAME` por tu usuario real de PythonAnywhere).
+5. En **"Static files"**, añade el mapeo `/static/` → `/home/TU_USUARIO/validadorlopdp/web/static/`
+   (mejora el rendimiento de la hoja de estilos frente a servirla vía la app).
+6. Click **"Reload"**. Tu validador queda en `https://TU_USUARIO.pythonanywhere.com`.
+7. **Actualizar el código más adelante**: `git pull` dentro de `validadorlopdp` en la consola Bash
+   + botón "Reload" en la pestaña Web. No hay despliegue automático desde GitHub en el plan gratuito.
+
+Limitación del plan gratuito de PythonAnywhere: la URL es fija en `TU_USUARIO.pythonanywhere.com`,
+**no puedes usar un subdominio propio** como `validador.protego-consulting.com` — eso requiere el
+plan "Hacker" (de pago, con dominio propio soportado).
+
+### Presentarlo en un sitio estático (el caso de protego-consulting.com)
+Un sitio estático en Git (GitHub Pages, Netlify, Cloudflare Pages, etc.) **no puede ejecutar Python**:
+solo sirve HTML/CSS/JS. El validador tiene que vivir aparte (p. ej. en PythonAnywhere, como arriba) y
+el sitio estático solo necesita **enlazarlo**, no incrustar su código.
+
+Recomendado: un botón/enlace que abra el validador en pestaña nueva, no un `<iframe>` — el formulario
+incluye una subida de archivo y un aviso legal que se leen mejor a pantalla completa, y evitas
+problemas de cabeceras de seguridad (`X-Frame-Options`) que muchos hosts añaden por defecto.
+
+```html
+<a href="https://TU_USUARIO.pythonanywhere.com/" target="_blank" rel="noopener"
+   class="boton-cta">
+  Valida gratis tu Política de Privacidad (LOPDP)
+</a>
+```
+
 ### Pendiente antes de publicar en protego-consulting.com
-1. Elegir dónde vive el contenedor (subdominio propio tipo `validador.protego-consulting.com`,
-   o un iframe embebido en el sitio actual) — este repo no incluye el hosting del sitio principal.
-2. Poner el servicio detrás de HTTPS y, si el volumen lo justifica, un WAF o Cloudflare para
-   mitigar abuso más allá del rate limit en memoria.
+1. Elegir el hosting definitivo del backend (PythonAnywhere gratuito para validar la idea, o el plan
+   "Hacker"/Docker en Render-Railway-Fly.io si luego quieres el subdominio propio) — este repo no
+   incluye el hosting del sitio principal.
+2. Confirmar que el sitio estático queda servido en HTTPS y que el enlace al validador también lo está
+   (PythonAnywhere ya sirve `https://` por defecto).
 3. Revisar el enlace de contacto en `web/templates/index.html` (`https://protego-consulting.com/`)
    y apuntarlo a la página de contacto real cuando exista.
