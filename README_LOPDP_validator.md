@@ -48,43 +48,56 @@ menciona razonablemente el tema — no certifica que el contenido sea correcto o
 filtro antes de tu revisión manual como DPO.
 
 ## Versión web de autoservicio (`web/`)
-Además del CLI, hay una capa web (FastAPI) en `web/app.py` para que un visitante suba su política y
+Además del CLI, hay una capa web (Flask) en `web/app.py` para que un visitante suba su política y
 descargue el informe sin intervención manual. Reutiliza directamente las funciones de
 `lopdp_validator.py` — el checklist y la lógica de evaluación son la misma fuente de verdad.
 
+**Por qué Flask y no FastAPI**: la primera versión usaba FastAPI (ASGI) envuelto con `a2wsgi` para
+poder correr en PythonAnywhere. En producción eso se colgaba en *cada* request (HARAKIRI de uWSGI a
+los pocos minutos) porque `a2wsgi` necesita un hilo interno para conectar el mundo async con WSGI, y
+uWSGI en el plan gratuito de PythonAnywhere corre sin `--enable-threads` (no es configurable ahí) —
+ese hilo nunca se programa y la petición espera para siempre. Flask es WSGI nativo: no necesita
+ningún adaptador ni hilos adicionales, así que ese problema desaparece por diseño, no por parche.
+
 Decisiones de diseño relevantes para producción:
 - **No se persiste nada del cliente**: cada solicitud usa un directorio temporal que se borra
-  (`shutil.rmtree`) justo después de enviar la respuesta, incluso si el procesamiento falla.
-- **Límite de tamaño** (`MAX_FILE_MB`, default 8 MB) y **timeout de procesamiento**
-  (`PROCESS_TIMEOUT_SEC`, default 25s) para evitar archivos que agoten memoria/CPU.
+  (`shutil.rmtree`) justo después de enviar la respuesta (`flask.after_this_request`), incluso si el
+  procesamiento falla.
+- **Límite de tamaño** (`MAX_FILE_MB`, default 8 MB) vía `MAX_CONTENT_LENGTH` de Flask — Werkzeug
+  rechaza la petición (413) antes de terminar de leer un archivo demasiado grande.
 - **Verificación de magic bytes**, no solo la extensión del archivo, para rechazar archivos
   renombrados que no coinciden con su contenido real.
 - **Rate limiting básico por IP** (`RATE_LIMIT_PER_HOUR`, default 5) en memoria — válido para una
   sola instancia; si se despliega con varias réplicas hay que mover esto a Redis o similar.
 - **Aviso legal obligatorio** antes de subir el archivo (checkbox de consentimiento validado también
   en el servidor), para que quede claro que el resultado es un cribado documental, no un dictamen legal.
+- **Sin timeout de aplicación explícito**: se apoya en el límite de tamaño de archivo + el timeout del
+  propio servidor (`--timeout 30` en gunicorn/Docker, el HARAKIRI de uWSGI en PythonAnywhere) como
+  respaldo, en vez de un timeout implementado a mano — cualquier mecanismo basado en hilos o señales
+  tiene el mismo riesgo de plan gratuito que ya causó el problema de arriba.
 
 ### Ejecutar en local
 ```
 pip install -r requirements.txt
-uvicorn web.app:app --reload --port 8000
+python web/app.py
 ```
-Abre `http://localhost:8000`.
+Abre `http://localhost:8000`. (`FLASK_DEBUG=1 python web/app.py` para autorecarga en desarrollo.)
 
 ### Desplegar con Docker
 ```
 docker build -t validador-lopdp .
 docker run -p 8000:8000 --memory=512m --cpus=1 validador-lopdp
 ```
-El límite de memoria/CPU del contenedor (`--memory`, `--cpus`) es la última línea de defensa contra un
-archivo malicioso que intente agotar recursos durante el parseo de PDF/DOCX — se recomienda fijarlo
-también en el orquestador de producción (Render, Railway, Fly.io, ECS, etc.), no solo en local.
+Corre con `gunicorn` (`--timeout 30`, 2 workers). El límite de memoria/CPU del contenedor (`--memory`,
+`--cpus`) es la última línea de defensa contra un archivo malicioso que intente agotar recursos durante
+el parseo de PDF/DOCX — se recomienda fijarlo también en el orquestador de producción (Render, Railway,
+Fly.io, ECS, etc.), no solo en local.
 
 ### Desplegar en PythonAnywhere (cuenta gratuita, Python 3.10)
-PythonAnywhere solo ejecuta apps **WSGI** (Flask/Django); esta app es **ASGI** (FastAPI). Por eso
-`requirements.txt` incluye `a2wsgi`, que envuelve la app FastAPI para que PythonAnywhere la sirva
-igual que cualquier otra. Probado localmente (subida de archivo incluida) simulando ese mismo
-adaptador antes de documentar estos pasos. El repositorio es público, así que `git clone`/`git pull`
+Al ser Flask (WSGI nativo), PythonAnywhere la sirve directamente — sin adaptadores. Probado localmente
+subiendo un archivo real a través de un servidor WSGI de un solo hilo (`wsgiref`, simulando el uWSGI
+sin `--enable-threads` de PythonAnywhere) antes de documentar estos pasos, precisamente para no repetir
+el problema de la versión con FastAPI. El repositorio es público, así que `git clone`/`git pull`
 funcionan sin credenciales — `github.com` está en la lista blanca de sitios permitidos para cuentas
 gratuitas de PythonAnywhere.
 

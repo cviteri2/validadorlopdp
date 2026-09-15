@@ -5,8 +5,16 @@ deploy_webhook.py — recibe el webhook "push" de GitHub, actualiza el
 checkout local (git fetch + reset --hard) e instala dependencias, y le
 pide a la API de PythonAnywhere que recargue la web app.
 
-Solo se activa si GITHUB_WEBHOOK_SECRET está definido en el entorno — así,
-en Docker/local (donde no se define) esta ruta ni siquiera se monta.
+Solo se registra si GITHUB_WEBHOOK_SECRET está definido en el entorno — así,
+en Docker/local (donde no se define) esta ruta ni siquiera existe.
+
+Se ejecuta TODO de forma síncrona dentro de la misma request, sin hilos:
+en PythonAnywhere (plan gratuito) uWSGI corre sin --enable-threads, así que
+un hilo en segundo plano lanzado por la propia app nunca llegaría a
+ejecutarse. Como consecuencia, GitHub puede marcar la entrega del webhook
+como "lenta" o "timeout" en su UI si el pull + pip install tardan más de
+~10s — es cosmético, el despliegue ya se ejecutó igual del lado del
+servidor antes de intentar escribir la respuesta.
 
 IMPORTANTE: el checkout en el servidor pasa a ser de solo lectura para
 humanos. Un `git reset --hard` en cada push descarta cualquier edición
@@ -20,12 +28,11 @@ import logging
 import os
 import subprocess
 import sys
-import threading
 import urllib.error
 import urllib.request
 from pathlib import Path
 
-from fastapi import APIRouter, Header, HTTPException, Request, Response
+from flask import Blueprint, Response, jsonify, request
 
 logger = logging.getLogger("deploy_webhook")
 
@@ -37,9 +44,9 @@ PA_USERNAME = os.environ.get("PYTHONANYWHERE_USERNAME", "")
 PA_DOMAIN = os.environ.get("PYTHONANYWHERE_DOMAIN", f"{PA_USERNAME}.pythonanywhere.com")
 PA_API_HOST = os.environ.get("PYTHONANYWHERE_API_HOST", "www.pythonanywhere.com")
 DEPLOY_BRANCH = os.environ.get("DEPLOY_BRANCH", "main")
-GIT_TIMEOUT_SEC = 120
+GIT_TIMEOUT_SEC = 90
 
-router = APIRouter()
+bp = Blueprint("deploy_webhook", __name__)
 
 
 def _verify_signature(raw_body: bytes, signature_header: str) -> bool:
@@ -77,7 +84,7 @@ def _reload_webapp() -> None:
         logger.error("deploy: fallo de red al recargar la web app: %s", e)
 
 
-def _deploy_in_background() -> None:
+def _deploy() -> bool:
     try:
         _run(["git", "fetch", "origin", DEPLOY_BRANCH])
         _run(["git", "reset", "--hard", f"origin/{DEPLOY_BRANCH}"])
@@ -85,36 +92,35 @@ def _deploy_in_background() -> None:
         _run(pip)
     except Exception:
         logger.exception("deploy: fallo actualizando el código, se mantiene la versión actual en ejecución")
-        return
+        return False
     _reload_webapp()
+    return True
 
 
-@router.post("/deploy/webhook")
-async def github_webhook(
-    request: Request,
-    x_hub_signature_256: str = Header(default=""),
-    x_github_event: str = Header(default=""),
-):
+@bp.post("/deploy/webhook")
+def github_webhook():
     if not WEBHOOK_SECRET:
-        raise HTTPException(status_code=501, detail="Webhook no configurado en este servidor")
+        return jsonify({"detail": "Webhook no configurado en este servidor"}), 501
 
-    raw_body = await request.body()
-    if not _verify_signature(raw_body, x_hub_signature_256):
-        raise HTTPException(status_code=401, detail="Firma inválida")
+    raw_body = request.get_data()
+    signature = request.headers.get("X-Hub-Signature-256", "")
+    if not _verify_signature(raw_body, signature):
+        return jsonify({"detail": "Firma inválida"}), 401
 
-    if x_github_event == "ping":
-        return {"status": "pong"}
+    event = request.headers.get("X-GitHub-Event", "")
+    if event == "ping":
+        return jsonify({"status": "pong"})
 
-    if x_github_event != "push":
-        return Response(status_code=204)
+    if event != "push":
+        return Response(status=204)
 
     try:
         payload = json.loads(raw_body or b"{}")
     except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Payload inválido")
+        return jsonify({"detail": "Payload inválido"}), 400
 
     if payload.get("ref") != f"refs/heads/{DEPLOY_BRANCH}":
-        return {"status": "ignorado", "motivo": "rama distinta a DEPLOY_BRANCH", "ref": payload.get("ref")}
+        return jsonify({"status": "ignorado", "motivo": "rama distinta a DEPLOY_BRANCH", "ref": payload.get("ref")})
 
-    threading.Thread(target=_deploy_in_background, daemon=True).start()
-    return Response(status_code=202)
+    ok = _deploy()
+    return jsonify({"status": "desplegado" if ok else "fallo"}), 200 if ok else 500
