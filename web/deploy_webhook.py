@@ -57,16 +57,23 @@ def _verify_signature(raw_body: bytes, signature_header: str) -> bool:
     return hmac.compare_digest(expected, received)
 
 
-def _run(cmd: list) -> None:
+def _run(cmd: list) -> str:
     logger.info("deploy: ejecutando %s", " ".join(cmd))
-    result = subprocess.run(
-        cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=GIT_TIMEOUT_SEC
-    )
-    if result.stdout:
-        logger.info("deploy stdout: %s", result.stdout.strip())
+    try:
+        result = subprocess.run(
+            cmd, cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=GIT_TIMEOUT_SEC
+        )
+    except FileNotFoundError as e:
+        raise RuntimeError(
+            f"no se pudo ejecutar '{cmd[0]}' en cwd={REPO_ROOT} "
+            f"(PATH={os.environ.get('PATH')!r}): {e}"
+        )
     if result.returncode != 0:
-        logger.error("deploy stderr: %s", result.stderr.strip())
-        raise RuntimeError(f"'{' '.join(cmd)}' salió con código {result.returncode}")
+        raise RuntimeError(
+            f"'{' '.join(cmd)}' salió con código {result.returncode}\n"
+            f"stdout: {result.stdout.strip()}\nstderr: {result.stderr.strip()}"
+        )
+    return result.stdout.strip()
 
 
 def _reload_webapp() -> None:
@@ -84,17 +91,16 @@ def _reload_webapp() -> None:
         logger.error("deploy: fallo de red al recargar la web app: %s", e)
 
 
-def _deploy() -> bool:
+def _deploy() -> tuple:
     try:
         _run(["git", "fetch", "origin", DEPLOY_BRANCH])
         _run(["git", "reset", "--hard", f"origin/{DEPLOY_BRANCH}"])
         pip = [sys.executable, "-m", "pip", "install", "--quiet", "-r", "requirements.txt"]
         _run(pip)
-    except Exception:
-        logger.exception("deploy: fallo actualizando el código, se mantiene la versión actual en ejecución")
-        return False
+    except Exception as e:
+        return False, str(e)
     _reload_webapp()
-    return True
+    return True, None
 
 
 @bp.post("/deploy/webhook")
@@ -122,5 +128,7 @@ def github_webhook():
     if payload.get("ref") != f"refs/heads/{DEPLOY_BRANCH}":
         return jsonify({"status": "ignorado", "motivo": "rama distinta a DEPLOY_BRANCH", "ref": payload.get("ref")})
 
-    ok = _deploy()
-    return jsonify({"status": "desplegado" if ok else "fallo"}), 200 if ok else 500
+    ok, error = _deploy()
+    if ok:
+        return jsonify({"status": "desplegado"})
+    return jsonify({"status": "fallo", "error": error}), 500
