@@ -38,6 +38,23 @@ logger = logging.getLogger("deploy_webhook")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+
+def _venv_python() -> str:
+    """Ruta a un intérprete python de verdad, no a sys.executable.
+
+    Bajo un proceso uWSGI con Python embebido, sys.executable es el propio
+    binario de uwsgi (que trae su intérprete adentro), no un `python3`
+    utilizable como comando — `uwsgi -m pip ...` falla porque uwsgi
+    interpreta esos argumentos como sus propias opciones de CLI. sys.prefix
+    sí apunta correctamente al virtualenv activo en cualquier entorno
+    (embebido o no), así que buscamos el binario ahí.
+    """
+    for name in ("python3", "python"):
+        candidate = Path(sys.prefix) / "bin" / name
+        if candidate.exists():
+            return str(candidate)
+    return sys.executable
+
 WEBHOOK_SECRET = os.environ.get("GITHUB_WEBHOOK_SECRET", "")
 PA_API_TOKEN = os.environ.get("PYTHONANYWHERE_API_TOKEN", "")
 PA_USERNAME = os.environ.get("PYTHONANYWHERE_USERNAME", "")
@@ -95,7 +112,7 @@ def _deploy() -> tuple:
     try:
         _run(["git", "fetch", "origin", DEPLOY_BRANCH])
         _run(["git", "reset", "--hard", f"origin/{DEPLOY_BRANCH}"])
-        pip = [sys.executable, "-m", "pip", "install", "--quiet", "-r", "requirements.txt"]
+        pip = [_venv_python(), "-m", "pip", "install", "--quiet", "-r", "requirements.txt"]
         _run(pip)
     except Exception as e:
         return False, str(e)
