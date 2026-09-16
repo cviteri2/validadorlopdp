@@ -1,5 +1,7 @@
 # Validador de Políticas de Protección de Datos vs. LOPDP
 
+<!-- prueba del webhook de auto-deploy: este comentario se puede borrar -->
+
 ## Instalación (una sola vez)
 ```
 pip install python-docx pdfplumber pypdf
